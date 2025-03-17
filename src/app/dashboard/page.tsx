@@ -19,7 +19,6 @@ export default function DashboardPage() {
   return (
     <DashboardLayout>
       <Flex direction="column" gap={6}>
-        {/* Tarjeta de Bienvenida */}
 
         <CustomCard
           display={{ base: "block", md: "none" }}
@@ -64,7 +63,6 @@ export default function DashboardPage() {
           </Text>
         </CustomCard>
 
-        {/* Tarjetas de Estadísticas */}
         <CustomCard flex={1}>
             <Heading size="md" mb={2}>
               Hora actual
@@ -73,8 +71,6 @@ export default function DashboardPage() {
               <ClockCard />
             </Text>
           </CustomCard>
-
-        {/* Tarjeta de Actividad Reciente */}
       </Flex>
     </DashboardLayout>
   );

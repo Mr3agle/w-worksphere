@@ -4,7 +4,7 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { account } from '@/lib/appwrite';
 import { redirect } from 'next/navigation';
 import { OAuthProvider } from 'appwrite';
-import { profile } from 'console';
+// import { profile } from 'console';
 
 interface AuthContextType {
   user: any;
@@ -19,8 +19,6 @@ const AuthContext = createContext<AuthContextType | null>(null);
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-
-
 
   const fetchMicrosoftProfilePic = async (accessToken: string) => {
 
@@ -52,9 +50,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-
-
-
   useEffect(() => {
     const fetchUser = async () => {
       try {
@@ -84,8 +79,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       await account.createOAuth2Session(
         OAuthProvider.Microsoft,
-        'http://localhost:3000/dashboard',
-        'http://localhost:3000/'
+        process.env.APPWRITE_OAUTH_SUCCESS_REDIRECT,
+        process.env.APPWRITE_OAUTH_FALLBACK
       );
       console.log('Login successful, fetching user session...');
       const userData = await account.getSession("current");

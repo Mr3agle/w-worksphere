@@ -4,11 +4,10 @@ import DashboardLayout from "../dashboard/DashboardLayout";
 import { Flex, Heading, Text } from "@chakra-ui/react";
 import CustomCard from "@/components/Cards";
 
-export default function DashboardPage() {
+export default function ViajesPage() {
   return (
     <DashboardLayout>
       <Flex direction="column" gap={6} w="100%">
-        {/* Tarjeta de Bienvenida */}
         <CustomCard>
           <Heading size="lg" mb={4}>
             Viajes

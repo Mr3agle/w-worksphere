@@ -48,23 +48,14 @@ export default function Login() {
 
   return (
 
-    // <Flex
-    //   justify="center"
-    //   align="center"
-    //   h="100vh"
-    //   w="100vw"
-    //   bg="green"
-    // >
     <Flex
       p={{ md: "3rem", base: "1rem" }}
       w="full"
       h="100vh"
       direction={{ base: "column", md: "row" }}
-      // gap={6}
       css={{ animation: `${fadeInUp} 0.6s ease-out` }}
       bg={{ md: "white" }}
     >
-      {/* Left Image Section */}
       <Box
         display={{ base: "none", md: "block" }}
         flex={1}
@@ -77,7 +68,7 @@ export default function Login() {
         />
 
       </Box>
-      {/* Right Form Section */}
+
       <Box
         flex={2}
         css={{ animation: `${fadeInUp} 1s ease-out` }}
@@ -87,9 +78,6 @@ export default function Login() {
         alignItems="center"
         rounded="lg"
         bg={{ base: "white", md: "transparent" }}
-        // bgGradient="linear-gradient(45 deg, white, #dbeafe,rgb(0, 106, 255))"
-        // backgroundSize="cover"
-      // p={{base: 0}}
       >
         <VStack bg={{ base: "transparent", md: "white" }} shadow={{ md: "xl" }} w={{ base: "100%", lg: "70%" }} p={{ lg: "3rem", base: "2rem" }} borderRadius={20} >
 
@@ -105,16 +93,10 @@ export default function Login() {
 
             </Box>
             <Text
-              // bg="red"
               fontSize={{ base: "1.5rem", md: "2rem" }}
-              // textAlign="left"
               color="gray.800"
               fontWeight="bolder"
-              // mb={{ md: "20px"}}
               fontFamily="'Funnel Display', sans-serif"
-            // className={funnelDisplay.className}
-            // lineHeight="1"
-            // marginBottom="50px"
             >
               WorkSphere Platform
             </Text>
@@ -140,6 +122,5 @@ export default function Login() {
         </VStack>
       </Box>
     </Flex>
-    // </Flex>
   );
 }

@@ -11,8 +11,6 @@ import { useAuth } from "@/context/AuthContext"
 import { ID, Query } from "appwrite"
 import CustomCard from "@/components/Cards"
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
-// import { Session } from "inspector/promises";
-// import { timeStamp } from "console";
 
 function ValidateEndShift({ open, setOpen, onConfirm }
   : {
@@ -66,14 +64,11 @@ function SummaryWorkDayPopup({ open, setOpen, clockInTime, workedTime, breakTime
           <Dialog.Content>
             <Dialog.Header>
               <Dialog.Title>
-                <Heading as="span">
                   Resumen de la jornada
-                </Heading>
               </Dialog.Title>
             </Dialog.Header>
             <Dialog.Body>
               <VStack>
-
                 <DotLottieReact
                   src="https://lottie.host/bc01c093-6cb1-4ccd-85ff-fe518fe03b9a/8xQhlkzsqB.lottie"
                   autoplay
@@ -135,10 +130,8 @@ function SummaryWorkDayPopup({ open, setOpen, clockInTime, workedTime, breakTime
   )
 }
 
-export default function DashboardPage() {
-  // const database = "67aa89ac0032e01978eb"
-  // const work_sessions_collection = "67aa89b400293585c303"
-  // const breaks_collection = "67d25bb8003cbe386a35"
+export default function AsistenciaPage() {
+
   const database = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!
   const work_sessions_collection = process.env.NEXT_PUBLIC_APPWRITE_WORK_SESSIONS_COLLECTION!
   const breaks_collection = process.env.NEXT_PUBLIC_APPWRITE_BREAKS_COLLECTION!
@@ -263,7 +256,7 @@ export default function DashboardPage() {
             description: "Hubo un error al registrar tu asistencia.",
             duration: 5000
           })
-          
+
         } finally {
           setLoading(false);
         }
@@ -473,11 +466,11 @@ export default function DashboardPage() {
           // Formato amigable
           let formattedBreakTime
 
-          if(totalBreakTimeMinutes > 0){
-            formattedBreakTime =  bHours > 0
-            ? `${bHours} H ${bMinutes} m`
-            : `${bMinutes} minuto${bMinutes !== 1 ? "s" : ""}`;
-          }else{
+          if (totalBreakTimeMinutes > 0) {
+            formattedBreakTime = bHours > 0
+              ? `${bHours} H ${bMinutes} m`
+              : `${bMinutes} minuto${bMinutes !== 1 ? "s" : ""}`;
+          } else {
             formattedBreakTime = "Ninguno"
           }
 
@@ -651,7 +644,7 @@ export default function DashboardPage() {
             )
           }
         </CustomCard>
-        {/* Tarjetas de Estadísticas */}
+
         <Box
           gap={6}
           direction={{ base: "column", md: "row" }}
@@ -667,10 +660,6 @@ export default function DashboardPage() {
           <Card.Root rounded="3xl" shadow="xl" p={{ base: ".5rem", md: "1rem" }} width={{ base: "95%", md: "500px" }} display="flex" alignItems="center">
 
             <Card.Body gap="2" alignItems="center" w={{ base: "95%", md: "90%" }}>
-              {/* <Avatar.Root size="2xl" shape="rounded">
-                <Avatar.Image src="https://picsum.photos/200/300" />
-                <Avatar.Fallback name="Nue Camp" />
-              </Avatar.Root> */}
               <Card.Title spaceY={5}> Control de Asistencia </Card.Title>
               <VStack>
                 <Text fontSize="md" fontWeight="bold" color="gray.500" mt='1rem'>
@@ -763,7 +752,6 @@ export default function DashboardPage() {
                   )
                 }
 
-                {/* <Button onClick={() => { setSummaryOpen(true) }}> Abrir test </Button> */}
               </VStack>
             </Card.Footer>
           </Card.Root>

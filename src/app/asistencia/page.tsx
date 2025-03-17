@@ -192,6 +192,7 @@ export default function AsistenciaPage() {
       } else {
         setSessionStatus("inactivo");
         setIsBreakLimitReached(false);
+        
       }
     } catch (error) {
       console.error("Parece no existir una sesión activa:", error);
@@ -522,6 +523,7 @@ export default function AsistenciaPage() {
               clockOutLocation: [latitude.toString(), longitude.toString()],
               status: "finalizado",
               totalWorkTime: totalWorkedHours,
+              breaksTaken: totalBreaksTakenToday,
               updatedAt: timestamp,
             }
           );

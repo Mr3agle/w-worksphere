@@ -192,7 +192,7 @@ export default function AsistenciaPage() {
       } else {
         setSessionStatus("inactivo");
         setIsBreakLimitReached(false);
-        
+
       }
     } catch (error) {
       console.error("Parece no existir una sesión activa:", error);
@@ -321,6 +321,13 @@ export default function AsistenciaPage() {
             }
           );
 
+          toaster.create({
+            type: "success",
+            title: "Break Iniciado",
+            description: "Disfruta de tu descanso ✨",
+            duration: 5000
+          })
+
           // 5. Actualizar el estado del break
           setSessionStatus("en break");
         },
@@ -330,6 +337,12 @@ export default function AsistenciaPage() {
 
     } catch (error) {
       console.error("Error al iniciar el break:", error);
+      toaster.create({
+        type: "error",
+        title: "Algo no salió bien",
+        description: "No pudimos iniciar tu break 🥺",
+        duration: 5000
+      })
     } finally {
       setLoading(false);
     }
@@ -399,11 +412,24 @@ export default function AsistenciaPage() {
         }
       );
 
+      toaster.create({
+        type: "success",
+        title: "¡De vuelta al trabajo!",
+        description: "¿En qué nos quedamos? 🤔",
+        duration: 5000
+      })
+
       // 7. Actualizar estado local
       setSessionStatus("activo");
 
     } catch (error) {
       console.error("Error al pausar el break:", error);
+      toaster.create({
+        type: "error",
+        title: "Oh no...",
+        description: "No pudimos pausar el break",
+        duration: 5000
+      })
     } finally {
       setLoading(false);
     }

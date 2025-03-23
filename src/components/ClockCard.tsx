@@ -21,7 +21,11 @@ const ClockCard: FC = () => {
   }
 
   return (
-      <span>{time.toLocaleTimeString()}</span>
+      <span>{time.toLocaleTimeString("es-ES", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false, // Cambia a true si prefieres AM/PM
+      })}</span>
   );
 };
 

@@ -22,7 +22,7 @@ export default function RootLayout({
 }>) {
 
   return (
-    <html suppressHydrationWarning lang="en">
+    <html suppressHydrationWarning lang="es" translate="no">
       <head>
         <meta name="apple-mobile-web-app-title" content="WorkSphere" />
         <meta name="mobile-web-app-capable" content="yes" />

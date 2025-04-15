@@ -6,3 +6,13 @@ html, body {
 .notranslate {
   translate: no;
 }
+
+.versionControl {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1000;
+  color: rgba(13, 13, 13, 0.242);
+  margin-top: 50px;
+}

@@ -92,6 +92,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           {children}
         </Box>
       </Flex>
+      <span className="versionControl">beta v0.1.2</span>
     </ProtectedLayout>
     // </AuthProvider>
   );

@@ -272,6 +272,8 @@ export default function AsistenciaPage() {
             duration: 5000
           })
           checkUserStatus()
+          setSessionStatus("activo");
+
         } catch (error) {
           console.error("Error al registrar Clock In:", error);
           // alert("Hubo un error al registrar tu asistencia.");
@@ -346,19 +348,20 @@ export default function AsistenciaPage() {
               updatedAt: serverTimeIsoString
             }
           );
-
+          
           toaster.create({
             type: "success",
             title: "Break Iniciado",
             description: "Disfruta de tu descanso ✨",
             duration: 5000
           })
-
+          
           // 5. Actualizar el estado del break
           setSessionStatus("en break");
         },
         (error) => {
           console.error("Error al obtener la ubicación del usuario:", error);
+          setLoading(false);
         })
 
     } catch (error) {
@@ -370,7 +373,9 @@ export default function AsistenciaPage() {
         duration: 5000
       })
     } finally {
-      setLoading(false);
+      setTimeout(() => {
+        setLoading(false);
+      }, 250);
     }
   };
 

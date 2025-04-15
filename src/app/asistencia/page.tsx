@@ -6,7 +6,7 @@ import { toaster } from "@/components/ui/toaster";
 import { FiCoffee, FiLogOut, FiPause, FiPlay, FiFileText, FiClock, FiCheck, FiMusic } from "react-icons/fi";
 import ClockCard from "@/components/ClockCard";
 import { useEffect, useState } from "react";
-import { databases } from "@/lib/appwrite"
+import { databases, getServerTimestamp } from "@/lib/appwrite"
 import { useAuth } from "@/context/AuthContext"
 import { ID, Query } from "appwrite"
 import CustomCard from "@/components/Cards"
@@ -64,7 +64,7 @@ function SummaryWorkDayPopup({ open, setOpen, clockInTime, workedTime, breakTime
           <Dialog.Content>
             <Dialog.Header>
               <Dialog.Title>
-                  Resumen de la jornada
+                Resumen de la jornada
               </Dialog.Title>
             </Dialog.Header>
             <Dialog.Body>
@@ -163,6 +163,26 @@ export default function AsistenciaPage() {
     return colorPalette[index]
   }
 
+  const fetchTimestamp = async () => {
+    try {
+      const response = await getServerTimestamp();
+      // Aquí se espera que la respuesta tenga la forma { iso, timestamp }
+      const srvParsedTime = JSON.parse(response.responseBody)
+      console.log(srvParsedTime.time)
+      // const ecTime = new Date(srvParsedTime.time).toLocaleString('es-EC', {
+      //   timeZone: 'America/Guayaquil',
+      //   hour12: false
+      // });
+      // console.log(ecTime)
+      // setServerTime(ecTime);
+      return srvParsedTime.time
+
+    } catch (err) {
+      console.error('Error fetching server timestamp:', err);
+      // setError('Error al obtener la hora del servidor.');
+    }
+  };
+
   const checkUserStatus = async () => {
     setLoading(true);
     if (!user?.$id) {
@@ -227,16 +247,20 @@ export default function AsistenciaPage() {
 
         try {
           // Guardar en Appwrite
+
+          const serverTimeIsoString = await fetchTimestamp();
+          if (!serverTimeIsoString) throw new Error("No se pudo obtener el timestamp del servidor");
+
           await databases.createDocument(
             database,  // Reemplaza con tu ID de base de datos
             work_sessions_collection, // Reemplaza con tu ID de colección
             ID.unique(),      // Genera un ID único automáticamente
             {
               userId: user.$id,
-              clockIn: timestamp,
+              clockIn: serverTimeIsoString,
               clockInLocation: [latitude.toString(), longitude.toString()],
               status: "activo",
-              createdAt: timestamp,
+              createdAt: serverTimeIsoString,
               breakLimitReached: false
             }
           );
@@ -297,6 +321,8 @@ export default function AsistenciaPage() {
           const { latitude, longitude } = position.coords;
           // const timestamp = new Date().toISOString();
 
+          const serverTimeIsoString = await fetchTimestamp();
+          if (!serverTimeIsoString) throw new Error("No se pudo obtener el timestamp del servidor");
           // 3. Crear el documento de break en la colección de breaks
           await databases.createDocument(
             database,
@@ -305,7 +331,7 @@ export default function AsistenciaPage() {
             {
               userId: user?.$id,
               workSessionId: currentWorkSessionId,  // Asociamos el `workSessionId` de la sesión de trabajo
-              startTime: timestamp,
+              startTime: serverTimeIsoString,
               isActive: true,
               location: [latitude.toString(), longitude.toString()]
             }
@@ -317,7 +343,7 @@ export default function AsistenciaPage() {
             currentWorkSessionId,
             {
               status: "en break",
-              updatedAt: timestamp
+              updatedAt: serverTimeIsoString
             }
           );
 
@@ -372,10 +398,11 @@ export default function AsistenciaPage() {
         work_sessions_collection,
         workSessionId
       )
-
+      const serverTimeIsoString = await fetchTimestamp();
+      if (!serverTimeIsoString) throw new Error("No se pudo obtener el timestamp del servidor");
       // 3. Calcular el tiempo transcurrido en minutos (como double)
       const startBreakTime = new Date(activeBreak.startTime)
-      const pauseBreakTime = new Date()
+      const pauseBreakTime = new Date(serverTimeIsoString)
       const elapsedTimeMs = pauseBreakTime.getTime() - startBreakTime.getTime();
       const elapsedTimeMin = Math.round((elapsedTimeMs / 60000) * 100) / 100; // Convertir a double
 
@@ -454,6 +481,10 @@ export default function AsistenciaPage() {
         const { latitude, longitude } = position.coords;
         // const timestamp = new Date().toISOString();
         try {
+
+          const serverTimeIsoString = await fetchTimestamp();
+          if (!serverTimeIsoString) throw new Error("No se pudo obtener el timestamp del servidor");
+
           const workSession = await databases.listDocuments(
             database,
             work_sessions_collection, // Asegúrate de usar el nombre correcto de la colección
@@ -468,7 +499,7 @@ export default function AsistenciaPage() {
           const currentWorkSessionId = currentWorkSession.$id;
 
           const startTime = new Date(currentWorkSession.clockIn);
-          const clockOutTime = new Date();
+          const clockOutTime = new Date(serverTimeIsoString);
 
 
           // 🔹 Cálculo exacto del tiempo trabajado en milisegundos
@@ -545,12 +576,12 @@ export default function AsistenciaPage() {
             work_sessions_collection, // Reemplaza con tu ID de colección
             currentWorkSessionId,      // Genera un ID único automáticamente
             {
-              clockOut: timestamp,
+              clockOut: serverTimeIsoString,
               clockOutLocation: [latitude.toString(), longitude.toString()],
               status: "finalizado",
               totalWorkTime: totalWorkedHours,
               breaksTaken: totalBreaksTakenToday,
-              updatedAt: timestamp,
+              updatedAt: serverTimeIsoString,
             }
           );
           // alert("Clock Out registrado correctamente.");

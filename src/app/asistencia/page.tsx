@@ -510,13 +510,12 @@ const handleClockOut = async () => {
     // Retornamos sin continuar si no se puede obtener la ubicación.
     return;
   }
-
   const { latitude, longitude} = position.coords
 
-  try {
+  const serverTimeIsoString = await fetchTimestamp();
+  if (!serverTimeIsoString) throw new Error("No se pudo obtener el timestamp del servidor"); 
 
-    const serverTimeIsoString = await fetchTimestamp();
-    if (!serverTimeIsoString) throw new Error("No se pudo obtener el timestamp del servidor");
+  try {
 
     const workSession = await databases.listDocuments(
       database,
@@ -573,10 +572,10 @@ const handleClockOut = async () => {
         console.error("Error al pausar el break", error);
       }
     }
-    const todayStart = new Date();
+    const todayStart = new Date(serverTimeIsoString);
     todayStart.setHours(0, 0, 0, 0); // Establece la hora a las 00:00:00 del día de hoy
 
-    const todayEnd = new Date();
+    const todayEnd = new Date(serverTimeIsoString);
     todayEnd.setHours(23, 59, 59, 999);
 
     const getBreaksFromToday = await databases.listDocuments(
@@ -649,6 +648,9 @@ const handleNoteSubmit = async (e: React.FormEvent) => {
     return;
   }
 
+  const serverTimeIsoString = await fetchTimestamp();
+  if (!serverTimeIsoString) throw new Error("No se pudo obtener el timestamp del servidor");
+
   const promise = new Promise<void>(async (resolve, reject) => {
 
     const workSession = await databases.listDocuments(
@@ -666,7 +668,7 @@ const handleNoteSubmit = async (e: React.FormEvent) => {
       {
         userId: user.$id,
         sessionId: workSessionId,
-        createdAt: timestamp,
+        createdAt: serverTimeIsoString,
         noteContent: note
       }
     )
@@ -707,12 +709,16 @@ return (
           user &&
           (
             <Flex w="100%" justifyContent="space-between" alignItems="center">
+              <VStack position="relative" w="50%" alignItems="start">
+
               <Image
                 src="/logo-full.svg"
                 alt="Company Name"
-                w="25%"
+                w="60%"
                 mt={2}
               />
+              <span className="versionControl">βeta v0.1.2.2</span>
+              </VStack>
               <HStack justifyContent="end">
                 <Text as="span" fontWeight="bold">{user.name} </Text>
                 <Avatar.Root colorPalette={pickPalette(user.name)}>

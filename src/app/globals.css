@@ -8,11 +8,9 @@ html, body {
 }
 
 .versionControl {
+  color: rgba(42, 42, 42, 0.421);
+  font-size: 12px;
   position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  z-index: 1000;
-  color: rgba(13, 13, 13, 0.242);
-  margin-top: 50px;
+  bottom: -10px;
+  left: 50px;
 }

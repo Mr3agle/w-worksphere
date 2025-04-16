@@ -1,7 +1,7 @@
 // app/dashboard/page.tsx
 "use client"
 import DashboardLayout from "../dashboard/DashboardLayout";
-import { Flex, Box, Button, Avatar, Image, Heading, Text, HStack, DataList } from "@chakra-ui/react";
+import { Flex, Box, Button, Avatar, Image, Heading, Text, HStack, DataList, VStack } from "@chakra-ui/react";
 import { FiLogOut } from "react-icons/fi";
 // import ClockCard from "@/components/ClockCard";
 import { useAuth } from "@/context/AuthContext"
@@ -12,7 +12,7 @@ import { Query } from "appwrite";
 
 export default function ProfilePage() {
 
-  const { user, logout} = useAuth();
+  const { user, logout } = useAuth();
   const [stats, setStats] = useState<{ label: string; value: string; diff: number; helpText: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [hasProfile, setHasProfile] = useState(true);
@@ -28,7 +28,7 @@ export default function ProfilePage() {
     return colorPalette[index]
   }
 
-  useEffect(()=>{
+  useEffect(() => {
     const getUserProfileData = async () => {
       if (!user?.$id) {
         // console.warn("El usuario no está autenticado, evitando la consulta.");
@@ -53,8 +53,8 @@ export default function ProfilePage() {
         ]
 
         setStats(formattedStats)
-        
-      setHasProfile(true);
+
+        setHasProfile(true);
       } catch (error) {
         console.error("Error al obtener el perfil del usuario:", error);
         setHasProfile(false);
@@ -147,12 +147,16 @@ export default function ProfilePage() {
             user &&
             (
               <Flex w="100%" justifyContent="space-between" alignItems="center">
-                <Image
-                  src="/logo-full.svg"
-                  alt="Company Name"
-                  w="25%"
-                  mt={2}
-                />
+                <VStack position="relative" w="50%" alignItems="start">
+
+                  <Image
+                    src="/logo-full.svg"
+                    alt="Company Name"
+                    w="60%"
+                    mt={2}
+                  />
+                  <span className="versionControl">βeta v0.1.2.2</span>
+                </VStack>
                 <HStack justifyContent="end">
                   <Text as="span" fontWeight="bold">{user.name} </Text>
                   <Avatar.Root colorPalette={pickPalette(user.name)}>
@@ -168,20 +172,20 @@ export default function ProfilePage() {
         <CustomCard m=".5rem">
 
 
-        {stats.length === 0 ? (
-          <Box p={4} textAlign="center">
-            <Text fontSize="lg" color="gray.500">Todavía no se han cargado tus datos.</Text>
-          </Box>
-        ) : (
-          <DataList.Root orientation="horizontal" divideY="1px">
-            {stats.map((item) => (
-              <DataList.Item key={item.label} pt="4">
-                <DataList.ItemLabel fontWeight="bold">{item.label}</DataList.ItemLabel>
-                <DataList.ItemValue>{item.value}</DataList.ItemValue>
-              </DataList.Item>
-            ))}
-          </DataList.Root>
-        )}
+          {stats.length === 0 ? (
+            <Box p={4} textAlign="center">
+              <Text fontSize="lg" color="gray.500">Todavía no se han cargado tus datos.</Text>
+            </Box>
+          ) : (
+            <DataList.Root orientation="horizontal" divideY="1px">
+              {stats.map((item) => (
+                <DataList.Item key={item.label} pt="4">
+                  <DataList.ItemLabel fontWeight="bold">{item.label}</DataList.ItemLabel>
+                  <DataList.ItemValue>{item.value}</DataList.ItemValue>
+                </DataList.Item>
+              ))}
+            </DataList.Root>
+          )}
 
           {/* <DataList.Root orientation="horizontal" divideY="1px">
             {stats.map((item) => (

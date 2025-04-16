@@ -250,65 +250,66 @@ export default function AsistenciaPage() {
 
     setLoading(true);
     setIsBreakLimitReached(false);
-    // Obtener la ubicación del usuario
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        const { latitude, longitude } = position.coords;
 
-        try {
-          // Guardar en Appwrite
-
-          const serverTimeIsoString = await fetchTimestamp();
-          if (!serverTimeIsoString) throw new Error("No se pudo obtener el timestamp del servidor");
-
-          await databases.createDocument(
-            database,  // Reemplaza con tu ID de base de datos
-            work_sessions_collection, // Reemplaza con tu ID de colección
-            ID.unique(),      // Genera un ID único automáticamente
-            {
-              userId: user.$id,
-              clockIn: serverTimeIsoString,
-              clockInLocation: [latitude.toString(), longitude.toString()],
-              status: "activo",
-              createdAt: serverTimeIsoString,
-              breakLimitReached: false
-            }
-          );
-          // alert("Clock In registrado correctamente.");
-          toaster.create({
-            type: "success",
-            title: "Todo Listo",
-            description: "Se registró tu asistencia ¡Que tengas un gran día!",
-            duration: 5000
-          })
-          checkUserStatus()
-          setSessionStatus("activo");
-
-        } catch (error) {
-          console.error("Error al registrar Clock In:", error);
-          // alert("Hubo un error al registrar tu asistencia.");
-          toaster.create({
-            type: "error",
-            title: "Error de registro",
-            description: "Hubo un error al registrar tu asistencia.",
-            duration: 5000
-          })
-
-        } finally {
-          setLoading(false);
-        }
-      },
-      (error) => {
-        // alert("No se pudo obtener tu ubicación. Activa el GPS y otorga permisos.");
+    let position: GeolocationPosition;
+      try {
+        position = await getCurrentPositionAsync();
+      } catch (locError) {
         toaster.create({
           type: "warning",
-          title: "Permite la ubicación",
-          description: "No se pudo obtener tu ubicación. Activa el GPS y otorga permisos.",
+          title: "Ubicación necesaria",
+          description:
+            "No se pudo obtener la ubicación. Por favor, activa el GPS y otorga permisos.",
+          duration: 5000,
+        });
+        // Retornamos sin continuar si no se puede obtener la ubicación.
+        return;
+      }
+
+      const { latitude, longitude } = position.coords;
+
+      try {
+        // Guardar en Appwrite
+
+        const serverTimeIsoString = await fetchTimestamp();
+        if (!serverTimeIsoString) throw new Error("No se pudo obtener el timestamp del servidor");
+
+        await databases.createDocument(
+          database,  // Reemplaza con tu ID de base de datos
+          work_sessions_collection, // Reemplaza con tu ID de colección
+          ID.unique(),      // Genera un ID único automáticamente
+          {
+            userId: user.$id,
+            clockIn: serverTimeIsoString,
+            clockInLocation: [latitude.toString(), longitude.toString()],
+            status: "activo",
+            createdAt: serverTimeIsoString,
+            breakLimitReached: false
+          }
+        );
+        // alert("Clock In registrado correctamente.");
+        toaster.create({
+          type: "success",
+          title: "Todo Listo",
+          description: "Se registró tu asistencia ¡Que tengas un gran día!",
           duration: 5000
         })
+        checkUserStatus()
+        setSessionStatus("activo");
+
+      } catch (error) {
+        console.error("Error al registrar Clock In:", error);
+        // alert("Hubo un error al registrar tu asistencia.");
+        toaster.create({
+          type: "error",
+          title: "Error de registro",
+          description: "Hubo un error al registrar tu asistencia.",
+          duration: 5000
+        })
+
+      } finally {
         setLoading(false);
       }
-    );
   };
 
   const handleStartBreak = async () => {
@@ -495,141 +496,143 @@ const handleClockOut = async () => {
   setLoading(true);
   // Obtener la ubicación del usuario
 
-  navigator.geolocation.getCurrentPosition(
-    async (position) => {
-      const { latitude, longitude } = position.coords;
-      // const timestamp = new Date().toISOString();
-      try {
+  let position: GeolocationPosition;
+  try {
+    position = await getCurrentPositionAsync()
+  } catch (locError) {
+    toaster.create({
+      type: "error",
+      title: "Ubicación necesaria",
+      description:
+        "No se pudo obtener la ubicación. Por favor, activa el GPS y otorga permisos.",
+      duration: 5000,
+    });
+    // Retornamos sin continuar si no se puede obtener la ubicación.
+    return;
+  }
 
-        const serverTimeIsoString = await fetchTimestamp();
-        if (!serverTimeIsoString) throw new Error("No se pudo obtener el timestamp del servidor");
+  const { latitude, longitude} = position.coords
 
-        const workSession = await databases.listDocuments(
-          database,
-          work_sessions_collection, // Asegúrate de usar el nombre correcto de la colección
-          [Query.equal("userId", user.$id), Query.contains("status", ["activo", "en break"])]
-        );
+  try {
 
-        if (workSession.documents.length === 0) {
-          throw new Error("No hay una sesión de trabajo activa.");
-        }
+    const serverTimeIsoString = await fetchTimestamp();
+    if (!serverTimeIsoString) throw new Error("No se pudo obtener el timestamp del servidor");
 
-        const currentWorkSession = workSession.documents[0];
-        const currentWorkSessionId = currentWorkSession.$id;
+    const workSession = await databases.listDocuments(
+      database,
+      work_sessions_collection, // Asegúrate de usar el nombre correcto de la colección
+      [Query.equal("userId", user.$id), Query.contains("status", ["activo", "en break"])]
+    );
 
-        const startTime = new Date(currentWorkSession.clockIn);
-        const clockOutTime = new Date(serverTimeIsoString);
-
-
-        // 🔹 Cálculo exacto del tiempo trabajado en milisegundos
-        const elapsedTimeMs = clockOutTime.getTime() - startTime.getTime();
-
-        const totalBreakTimeMs = (currentWorkSession.totalBreakTime || 0) * 60000;
-        const totalBreakTimeMinutes = currentWorkSession.totalBreakTime || 0
-
-        const workedHours = Math.max(0, (elapsedTimeMs - totalBreakTimeMs) / 3600000);
-        const totalWorkedHours = Number(workedHours.toFixed(2));
-
-        const wHours = Math.floor(totalWorkedHours);  // Parte entera, horas
-        const wMinutes = Math.round((totalWorkedHours - wHours) * 60);  // Los minutos restantes
-
-        // const formattedWorkedTime = `${wHours} hora${wHours !== 1 ? "s" : ""} y ${wMinutes} minuto${wMinutes !== 1 ? "s" : ""}`;
-        const formattedWorkedTime = `${wHours} H ${wMinutes} m`;
-
-        // Convertir minutos en horas y minutos
-        const bHours = Math.floor(totalBreakTimeMinutes / 60);  // Parte entera, horas
-        const bMinutes = Math.round(totalBreakTimeMinutes % 60);  // Los minutos restantes redondeados
-
-        // Formato amigable
-        let formattedBreakTime
-
-        if (totalBreakTimeMinutes > 0) {
-          formattedBreakTime = bHours > 0
-            ? `${bHours} H ${bMinutes} m`
-            : `${bMinutes} minuto${bMinutes !== 1 ? "s" : ""}`;
-        } else {
-          formattedBreakTime = "Ninguno"
-        }
-
-
-        if (sessionStatus === "en break") {
-          try {
-            await handlePauseBreak();  // Pausar el break
-          } catch (error) {
-            console.error("Error al pausar el break", error);
-          }
-        }
-        const todayStart = new Date();
-        todayStart.setHours(0, 0, 0, 0); // Establece la hora a las 00:00:00 del día de hoy
-
-        const todayEnd = new Date();
-        todayEnd.setHours(23, 59, 59, 999);
-
-        const getBreaksFromToday = await databases.listDocuments(
-          database,
-          breaks_collection, // Asegúrate de usar el nombre correcto de la colección
-          [
-            Query.equal("userId", user.$id),
-            Query.equal("workSessionId", currentWorkSessionId),  // Filtra por el ID de la sesión actual
-            Query.greaterThanEqual("startTime", todayStart.toISOString()),  // Filtra los breaks desde el inicio del día de hoy
-            Query.lessThanEqual("endTime", todayEnd.toISOString()),  // Filtra los breaks hasta el final del día de hoy
-          ]
-        );
-
-        const totalBreaksTakenToday = getBreaksFromToday.documents.length
-
-        setCheckIn(formatTimeToAMPM(startTime))
-        setTotalWorkedTime(formattedWorkedTime)
-        setTotalBreakTime(formattedBreakTime)
-        setBreaksTaken(totalBreaksTakenToday)
-
-        setSummaryOpen(true)
-
-        setSessionStatus("inactivo")
-        setIsBreakLimitReached(false);
-        setOpen(false)
-
-        // Guardar en Appwrite
-        await databases.updateDocument(
-          database,  // Reemplaza con tu ID de base de datos
-          work_sessions_collection, // Reemplaza con tu ID de colección
-          currentWorkSessionId,      // Genera un ID único automáticamente
-          {
-            clockOut: serverTimeIsoString,
-            clockOutLocation: [latitude.toString(), longitude.toString()],
-            status: "finalizado",
-            totalWorkTime: totalWorkedHours,
-            breaksTaken: totalBreaksTakenToday,
-            updatedAt: serverTimeIsoString,
-          }
-        );
-        // alert("Clock Out registrado correctamente.");
-        checkUserStatus()
-
-      } catch (error) {
-        console.error("Error al registrar Clock Out:", error);
-        toaster.create({
-          type: "error",
-          title: "¡O-oh!",
-          description: "Hubo un error al registrar tu salida.",
-          duration: 3000
-        })
-        // alert("Hubo un error al registrar tu salida.");
-      } finally {
-        setLoading(false);
-      }
-    },
-    (error) => {
-      // alert("No se pudo obtener tu ubicación. Activa el GPS y otorga permisos.");
-      toaster.create({
-        type: "error",
-        title: "¡O-oh!",
-        description: "No se pudo obtener tu ubicación. Activa el GPS y otorga permisos.",
-        duration: 3000
-      })
-      setLoading(false);
+    if (workSession.documents.length === 0) {
+      throw new Error("No hay una sesión de trabajo activa.");
     }
-  );
+
+    const currentWorkSession = workSession.documents[0];
+    const currentWorkSessionId = currentWorkSession.$id;
+
+    const startTime = new Date(currentWorkSession.clockIn);
+    const clockOutTime = new Date(serverTimeIsoString);
+
+
+    // 🔹 Cálculo exacto del tiempo trabajado en milisegundos
+    const elapsedTimeMs = clockOutTime.getTime() - startTime.getTime();
+
+    const totalBreakTimeMs = (currentWorkSession.totalBreakTime || 0) * 60000;
+    const totalBreakTimeMinutes = currentWorkSession.totalBreakTime || 0
+
+    const workedHours = Math.max(0, (elapsedTimeMs - totalBreakTimeMs) / 3600000);
+    const totalWorkedHours = Number(workedHours.toFixed(2));
+
+    const wHours = Math.floor(totalWorkedHours);  // Parte entera, horas
+    const wMinutes = Math.round((totalWorkedHours - wHours) * 60);  // Los minutos restantes
+
+    // const formattedWorkedTime = `${wHours} hora${wHours !== 1 ? "s" : ""} y ${wMinutes} minuto${wMinutes !== 1 ? "s" : ""}`;
+    const formattedWorkedTime = `${wHours} H ${wMinutes} m`;
+
+    // Convertir minutos en horas y minutos
+    const bHours = Math.floor(totalBreakTimeMinutes / 60);  // Parte entera, horas
+    const bMinutes = Math.round(totalBreakTimeMinutes % 60);  // Los minutos restantes redondeados
+
+    // Formato amigable
+    let formattedBreakTime
+
+    if (totalBreakTimeMinutes > 0) {
+      formattedBreakTime = bHours > 0
+        ? `${bHours} H ${bMinutes} m`
+        : `${bMinutes} minuto${bMinutes !== 1 ? "s" : ""}`;
+    } else {
+      formattedBreakTime = "Ninguno"
+    }
+
+
+    if (sessionStatus === "en break") {
+      try {
+        await handlePauseBreak();  // Pausar el break
+      } catch (error) {
+        console.error("Error al pausar el break", error);
+      }
+    }
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0); // Establece la hora a las 00:00:00 del día de hoy
+
+    const todayEnd = new Date();
+    todayEnd.setHours(23, 59, 59, 999);
+
+    const getBreaksFromToday = await databases.listDocuments(
+      database,
+      breaks_collection, // Asegúrate de usar el nombre correcto de la colección
+      [
+        Query.equal("userId", user.$id),
+        Query.equal("workSessionId", currentWorkSessionId),  // Filtra por el ID de la sesión actual
+        Query.greaterThanEqual("startTime", todayStart.toISOString()),  // Filtra los breaks desde el inicio del día de hoy
+        Query.lessThanEqual("endTime", todayEnd.toISOString()),  // Filtra los breaks hasta el final del día de hoy
+      ]
+    );
+
+    const totalBreaksTakenToday = getBreaksFromToday.documents.length
+
+    setCheckIn(formatTimeToAMPM(startTime))
+    setTotalWorkedTime(formattedWorkedTime)
+    setTotalBreakTime(formattedBreakTime)
+    setBreaksTaken(totalBreaksTakenToday)
+
+    setSummaryOpen(true)
+
+    setSessionStatus("inactivo")
+    setIsBreakLimitReached(false);
+    setOpen(false)
+
+    // Guardar en Appwrite
+    await databases.updateDocument(
+      database,  // Reemplaza con tu ID de base de datos
+      work_sessions_collection, // Reemplaza con tu ID de colección
+      currentWorkSessionId,      // Genera un ID único automáticamente
+      {
+        clockOut: serverTimeIsoString,
+        clockOutLocation: [latitude.toString(), longitude.toString()],
+        status: "finalizado",
+        totalWorkTime: totalWorkedHours,
+        breaksTaken: totalBreaksTakenToday,
+        updatedAt: serverTimeIsoString,
+      }
+    );
+    // alert("Clock Out registrado correctamente.");
+    checkUserStatus()
+
+  } catch (error) {
+    console.error("Error al registrar Clock Out:", error);
+    toaster.create({
+      type: "error",
+      title: "¡O-oh!",
+      description: "Hubo un error al registrar tu salida.",
+      duration: 3000
+    })
+    // alert("Hubo un error al registrar tu salida.");
+  } finally {
+    setLoading(false);
+  }
+
 };
 
 
